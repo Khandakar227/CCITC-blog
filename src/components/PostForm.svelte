@@ -7,12 +7,13 @@
   import LanguageSupport from "../../public/assets/language_support.json";
 
   export let blogId = null;
+  export let mode = "CREATE";
 
   const dispatch = createEventDispatcher();
 
   const CodingLanguage = LanguageSupport;
-  
-  let post = {
+
+  export let post = {
     title: "",
     URL: "",
     description: "",
@@ -23,15 +24,20 @@
 
   $: handleSubmit = async (e) => {
     e.preventDefault();
-    if (post.title && post.description) {
-      const data = await addPost(post);
+    if (mode === "CREATE") {
+      if (post.title && post.description) {
+        const data = await addPost(post);
 
-      if (data?.error) {
-        notification.set(data?.error);
+        if (data?.error) {
+          notification.set(data?.error);
+          dispatch("closeForm");
+        }
+        notification.set(data?.message);
         dispatch("closeForm");
       }
-      notification.set(data?.message);
-      dispatch("closeForm");
+      else if (mode === "UPDATE") {
+        
+      }
     }
   };
 

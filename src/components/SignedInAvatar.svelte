@@ -18,7 +18,7 @@
       <img
         class="avatar"
         src={loggedInUser?.user?.photoURL}
-        on:error={console.log}
+        on:error={(e) => (e.target.src = "/assets/img/megacat.webp")}
         alt={loggedInUser?.user?.displayName}
       />
     </button>

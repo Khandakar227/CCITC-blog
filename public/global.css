@@ -17,6 +17,7 @@
 	--mode-button-height: 30px;
 	font-size: clamp(0.875rem, 0.4626rem + 1.0309vw + var(--user-font-scale), 1.125rem);
   }
+  button:disabled {cursor: not-allowed;}
   html {
 	scroll-behavior: smooth;
 	scroll-snap-align: center;

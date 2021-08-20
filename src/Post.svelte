@@ -1,15 +1,25 @@
 <script>
-  import { getPost, getUser, CreatedAt } from "../scripts/firebase";
-  import { darkmode } from "../scripts/store";
+  import {
+    getPost,
+    getUser,
+    CreatedAt,
+    upvotePost,
+    downvotePost,
+  } from "../scripts/firebase";
+  import { darkmode, notification } from "../scripts/store";
   import { onMount } from "svelte";
   import CommentBox from "./components/CommentBox.svelte";
   import LoadingIcon from "./icons/loadingIcon.svelte";
   import LikeIcon from "./icons/likeIcon.svelte";
   import CommentIcon from "./icons/commentIcon.svelte";
   import SignedInAvatar from "./components/SignedInAvatar.svelte";
+  import PostForm from "./components/PostForm.svelte";
+  import Settings from "./icons/settings.svelte";
 
   export let loggedInUser;
   export let params;
+
+  let Post;
 
   $: getUserFromId = async (user_id) => {
     const userData = await getUser(user_id);
@@ -17,105 +27,188 @@
   };
 
   onMount(async () => {
-    const { title } = await getPost(params.id);
-    document.title = title;
+    Post = await getPost(params.id);
+    document.title = Post?.title || "Not Found";
   });
+
+  const reactPost = async (post_id, vote) => {
+    if (loggedInUser?.user) {
+      const { uid } = loggedInUser?.user;
+      if (vote.includes(uid)) {
+        await downvotePost(post_id, uid).catch((err) =>
+          console.log(err.message)
+        );
+        Post = await getPost(params.id);
+      } else {
+        await upvotePost(post_id, uid).catch((err) => console.log(err.message));
+        Post = await getPost(params.id);
+      }
+    } else {
+      notification.set("You are not signed in..");
+    }
+  };
+
+  const showUpdateForm = async () => {};
+
+  const confirmDeletePost = async () => {};
 </script>
 
-<div
-  class="pb-1"
-  style="max-width:1500px;display: flex; border-bottom: 1px solid #bbbbbb52;
-   justify-content: flex-end; margin: 0 10px"
->
-  <SignedInAvatar {loggedInUser} />
-</div>
 <section class="post_wrapper grid-center">
-  {#await getPost(params?.id)}
+  {#if !Post}
     <LoadingIcon />
-  {:then Post}
-    {#if Post}
-      {#if Post?.error}
-        <error>{Post?.error}</error>
-      {/if}
-      <div style="margin: 0 auto; max-width: 1100px;">
-        <h1 class="title text-center pb-1 border_bottom">
-          {Post?.title || ""}
-        </h1>
-        {#if Post?.URL}
-          <figure class="text-center py-2">
-            <img
-              class="post_img"
-              src={Post?.URL}
-              alt={Post?.title}
-              on:error={(e) => (e.target.src = "/assets/img/404.webp")}
-            />
-          </figure>
-        {/if}
-        <div class="author pb-1">
-          {#await getUserFromId(Post?.user_id)}
-            <LoadingIcon />
-          {:then user}
-            <img
-              class="avatar"
-              src={user?.image}
-              on:error={(e) => (e.target.src = "/assets/img/megacat.webp")}
-              alt={user.name}
-            />
-            <div>
-              <h3 class="username py-1">{user?.name}</h3>
-              <small>{CreatedAt(Post?.created_at?.seconds)}</small>
-            </div>
-          {/await}
+  {:else if Post?.id}
+    <div
+      class="pb-1"
+      style="max-width:1500px;display: flex; border-bottom: 1px solid #bbbbbb52;
+     justify-content: flex-end; align-items: center; margin: 0 10px; gap: 1vw;"
+    >
+      <SignedInAvatar {loggedInUser} />
+
+      {#if loggedInUser?.user?.uid === Post?.user_id}
+        <div class="option_wrapper">
+          <button class="more_option transparent--button">
+            <Settings className="icon" />
+          </button>
+          <ul class="options">
+            <li>
+              <button
+                on:click={() => showUpdateForm()}
+                class="transparent--button my-1 w-100">EDIT</button
+              >
+            </li>
+            <li>
+              <button
+                on:click={() => confirmDeletePost()}
+                class="transparent--button my-1 w-100">DELETE</button
+              >
+            </li>
+          </ul>
         </div>
-        <pre
-          class="description py-1 pb-2">
+      {/if}
+    </div>
+
+    {#if Post?.error}
+      <error>{Post?.error}</error>
+    {/if}
+    <div style="margin: 0 auto; max-width: 1100px;">
+      <h1 class="title text-center pb-1 border_bottom">
+        {Post?.title || ""}
+      </h1>
+      {#if Post?.URL}
+        <figure class="text-center py-2">
+          <img
+            class="post_img"
+            src={Post?.URL}
+            alt={Post?.title}
+            on:error={(e) => (e.target.src = "/assets/img/404.webp")}
+          />
+        </figure>
+      {/if}
+      <div class="author pb-1">
+        {#await getUserFromId(Post?.user_id)}
+          <LoadingIcon />
+        {:then user}
+          <img
+            class="avatar"
+            src={user?.image}
+            on:error={(e) => (e.target.src = "/assets/img/megacat.webp")}
+            alt={user.name}
+          />
+          <div>
+            <h3 class="username py-1">{user?.name}</h3>
+            <small>{CreatedAt(Post?.created_at?.seconds)}</small>
+          </div>
+        {/await}
+      </div>
+      <pre
+        class="description py-1 pb-2">
                 {Post?.description}
             </pre>
-        {#if Post?.codes}
-          <div class="code_wrapper">
-            <pre
-              class={$darkmode
-                ? "code code_dark scrollbar_custom"
-                : "scrollbar_custom code code_light"}>
-                    {Post.codes}
+      {#if Post?.codes}
+        <div class="code_wrapper">
+          <pre
+            class={$darkmode
+              ? "code code_dark scrollbar_custom"
+              : "scrollbar_custom code code_light"}>
+                    {Post?.codes}
                 </pre>
-          </div>
-        {/if}
-        <div class="my-2 react_section">
-          <div>
-            <button class="transparent--button"
-              ><LikeIcon
-                className="icon"
-                style={`fill:${
-                  Post?.vote.includes(loggedInUser?.user?.uid)
-                    ? "red"
-                    : $darkmode
-                    ? "white"
-                    : "initial"
-                }`}
-              /></button
-            >
-            <span>{Post?.vote.length}</span>
-          </div>
-          <div>
-            <button class="transparent--button"
-              ><CommentIcon
-                className="icon"
-                style={`fill: ${$darkmode ? "white" : "initial"}`}
-              /></button
-            >
-            <span>{Post?.comment_no}</span>
-          </div>
         </div>
-        <CommentBox postId={Post?.id} />
+      {/if}
+      <div class="my-2 react_section">
+        <div>
+          <button
+            class="transparent--button"
+            on:click={async () => await reactPost(Post?.id, Post?.vote)}
+            disabled={!loggedInUser?.user}
+            ><LikeIcon
+              className="icon"
+              style={`fill:${
+                Post?.vote.includes(loggedInUser?.user?.uid)
+                  ? "red"
+                  : $darkmode
+                  ? "white"
+                  : "initial"
+              }`}
+            /></button
+          >
+          <span>{Post?.vote.length}</span>
+        </div>
+        <div>
+          <button class="transparent--button"
+            ><CommentIcon
+              className="icon"
+              style={`fill: ${$darkmode ? "white" : "initial"}`}
+            /></button
+          >
+          <span>{Post?.comment_no}</span>
+        </div>
       </div>
-    {:else}
-      <h3 class="text-center">No data</h3>
-    {/if}
-  {/await}
+
+      <CommentBox postId={Post?.id} {loggedInUser} />
+    </div>
+  {:else}
+    <h3 class="text-center">No data</h3>
+    <img class="my-1" src="/assets/img/404.webp" alt="Not found" />
+  {/if}
 </section>
 
 <style>
+  * {
+    position: relative;
+    --shadow-inset: rgba(255, 255, 255, 0.5);
+  }
+  button:hover {
+    filter: brightness(0.85);
+  }
+  button:disabled {
+    filter: opacity(0.25);
+  }
+  .option_wrapper:focus-within .options {
+    opacity: 1;
+    transform: translateX(0px);
+    visibility: visible;
+  }
+  .options {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.5s ease;
+    position: absolute;
+    padding: 5px;
+    border-radius: 5px;
+    list-style: none;
+    right: 0;
+    top: 50px;
+    z-index: 1;
+    background: #a9a9a95c;
+    box-shadow: inset 0 0 0 1px var(--shadow-inset);
+  }
+  .more_option {
+    background: bisque;
+    border-radius: 2pc;
+    display: flex;
+    padding: 0px 0;
+  }
   error {
     color: red;
     background-color: white;

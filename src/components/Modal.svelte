@@ -52,6 +52,7 @@
     flex: auto;
   }
   .modal {
+    min-height: 100px;
     width: 100%;
     padding: 5px;
     border-radius: 5px;

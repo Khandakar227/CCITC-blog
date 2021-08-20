@@ -38,7 +38,7 @@ const db = getFirestore();
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-export const currentUser = writable({user:null, loaded:false}); // logged in user store
+export const currentUser = writable({ user: null, loaded: false }); // logged in user store
 
 onAuthStateChanged(auth, async (user) => {
   let loaded = true;
@@ -60,7 +60,7 @@ onAuthStateChanged(auth, async (user) => {
 export const signingOut = () => {
   signOut(auth).then(() => {
     console.log("Signed out")
-    currentUser.set({user: null, loaded: true}) //update user store after logout
+    currentUser.set({ user: null, loaded: true }) //update user store after logout
   }).catch((error) => {
     console.log(error)
     console.log(error)
@@ -75,8 +75,8 @@ export const signIn = () => {
       // The signed-in user info.
       const user = result.user;
       console.log(user)
-      currentUser.set({user, loaded: true})
-      return {user, token}
+      currentUser.set({ user, loaded: true })
+      return { user, token }
 
     }).catch((error) => {
       const errorCode = error.code;
@@ -109,19 +109,19 @@ export const getAllBlogPosts = async (next, trim = true) => {
     collection(db, "posts"),
     where("approval", "==", true),
     orderBy("created_at", 'desc'),
-    startAfter(next? lastPost:0),
+    startAfter(next ? lastPost : 0),
     limit(6),
   );
-  const querySnapshot = await getDocs(next? nq : q);
+  const querySnapshot = await getDocs(next ? nq : q);
   querySnapshot.forEach((doc) => {
 
-    if(trim) {
-      const {id, user_id, title, description, vote, comment_no, created_at, URL} = doc.data()
-      Posts.push({id, user_id, title, description, vote, comment_no, created_at, URL})
+    if (trim) {
+      const { id, user_id, title, description, vote, comment_no, created_at, URL } = doc.data()
+      Posts.push({ id, user_id, title, description, vote, comment_no, created_at, URL })
     } else
       Posts.push(doc.data())
   });
-  
+
   lastPost = querySnapshot.docs[querySnapshot?.docs.length - 1]
   if (querySnapshot.empty) {
     lastPost = null
@@ -129,7 +129,8 @@ export const getAllBlogPosts = async (next, trim = true) => {
 
   return { posts: Posts, lastPost };
 };
-export const getBlogPosts = async (blog_id,next, trim = true) => {
+
+export const getBlogPosts = async (blog_id, next, trim = true) => {
   let Posts = [];
   const q = query(
     collection(db, "posts"),
@@ -137,21 +138,21 @@ export const getBlogPosts = async (blog_id,next, trim = true) => {
     where("blog_id", "==", blog_id),
     orderBy("created_at"),
     orderBy("vote"),
-    startAfter(next? lastPost: 0),
+    startAfter(next ? lastPost : 0),
     limit(6),
   );
 
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach((doc) => {
-    if(trim) {
-      const {id, user_id, title, description, vote, comment_no, created_at, URL} = doc.data()
-      Posts.push({id, user_id, title, description, vote, comment_no, created_at, URL})
+    if (trim) {
+      const { id, user_id, title, description, vote, comment_no, created_at, URL } = doc.data()
+      Posts.push({ id, user_id, title, description, vote, comment_no, created_at, URL })
     } else
       Posts.push(doc.data())
   });
 
   Posts = Posts.reverse();
-  
+
   lastPost = querySnapshot.docs[querySnapshot?.docs.length - 1]
   if (querySnapshot.empty) {
     lastPost = null
@@ -160,15 +161,15 @@ export const getBlogPosts = async (blog_id,next, trim = true) => {
   return { posts: Posts, lastPost };
 };
 
-export const getBlogCategoryDetail = async(id) => {
+export const getBlogCategoryDetail = async (id) => {
   const docRef = doc(db, "blogs", id);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    const {name, description} = docSnap.data();
-    return {name, description}
+    const { name, description } = docSnap.data();
+    return { name, description }
   } else {
     // doc.data() will be undefined in this case
-    return {error: {code: 404}}
+    return { error: { code: 404 } }
   }
 
 }
@@ -182,7 +183,7 @@ export const getComments = async (id, next, lastComment) => {
     startAfter(next ? lastComment : 0),
     limit(6),
   );
-  
+
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach((doc) => {
     comments.push(doc.data());
@@ -209,19 +210,19 @@ export const getUser = async (id) => {
   }
 }
 
-export const getPost = async(id) => {
+export const getPost = async (id) => {
   const docRef = doc(db, "posts", id)
   const docSnap = await getDoc(docRef);
   if (docSnap.exists() && docSnap.data().approval) {
     console.log(docSnap.data())
     return docSnap.data()
-  } else if(docSnap.exists() && !docSnap.data().approval) {
+  } else if (docSnap.exists() && !docSnap.data().approval) {
     console.log("The post has not been approved yet!");
-    return {error: "The post has not been approved yet!!"}
+    return { error: "The post has not been approved yet!!" }
   } else {
     // doc.data() will be undefined in this case
     console.log("No such document!");
-    return {error: "No such document!"}
+    return { error: "No such document!" }
   }
 }
 
@@ -266,47 +267,47 @@ export const addPost = async (post) => {
     comment_no: 0,
     id: doc(collection(db, "posts")).id,
   }
-  
+
   await setDoc(doc(collection(db, "posts")), newPost)
     .catch((err) => {
       console.log(err);
       return { error: err };
     });
-  return {message: "Your blog has been submitted and is currently being reviewed."}
+  return { message: "Your blog has been submitted and is currently being reviewed." }
 };
 
-export const editPost = async(post_id, post) => {
+export const editPost = async (post_id, post) => {
   const ref = doc(db, "posts", post_id);
 
   await updateDoc(ref, {
-    ...post, updated_at: serverTimestamp()   
+    ...post, updated_at: serverTimestamp()
   })
-  .catch((err) => {
-    console.log(err);
-    return { error: err };
-  });
-  return {message: "Your blog has been updated."}
+    .catch((err) => {
+      console.log(err);
+      return { error: err };
+    });
+  return { message: "Your blog has been updated." }
 }
 
-export const upvotePost = async(post_id, user_id) => {
+export const upvotePost = async (post_id, user_id) => {
   const ref = doc(db, "posts", post_id);
   await updateDoc(ref, {
     vote: arrayUnion(user_id)
-  })
+  }).catch(err => console.log(err))
 }
 
-export const downvotePost = async(post_id, user_id) => {
+export const downvotePost = async (post_id, user_id) => {
   const ref = doc(db, "posts", post_id);
   await updateDoc(ref, {
     vote: arrayRemove(user_id)
-  })
+  }).catch(err => console.log(err))
 }
 
-export const deletePost = async(post_id) => {
+export const deletePost = async (post_id) => {
   const ref = doc(db, "posts", post_id)
   await deleteDoc(ref)
     .catch(err => err.message)
-  return {message: "Your post has been deleted"}
+  return { message: "Your post has been deleted" }
 }
 
 export const writeComment = () => {
