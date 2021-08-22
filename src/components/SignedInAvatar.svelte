@@ -1,7 +1,10 @@
 <script>
   import { signingOut, signIn } from "../../scripts/firebase";
+import { darkmode } from "../../scripts/store";
 
   export let loggedInUser;
+
+  let confirmLogOut = false;
 
   const onSignInWithGoogle = () => {
     signIn();
@@ -9,6 +12,7 @@
 
   const onSignOut = () => {
     signingOut();
+    confirmLogOut = false;
   };
 </script>
 
@@ -22,13 +26,27 @@
         alt={loggedInUser?.user?.displayName}
       />
     </button>
-    <button class="signing_button" on:click={() => onSignOut()}>LOG OUT</button>
+    <button class="signing_button" on:click={() => (confirmLogOut = true)}
+      >LOG OUT</button
+    >
     <!-- <small class="name_on_focus">{loggedInUser?.displayName}</small> -->
   </div>
 {:else if loggedInUser?.loaded}
   <button class="signing_button sign_in" on:click={() => onSignInWithGoogle()}
     >SIGN IN WITH GOOGLE</button
   >
+{/if}
+{#if confirmLogOut}
+  <div class="cnfrmtn_wrapper">
+    <div class="cnfrm_container grid-center" style={`background: ${$darkmode? "black" :"white"};`}>
+      <h5>Sure you want to log out?</h5>
+      <div class="my-1 cnfrm_bttn_wrapper">
+        <button class="cnfrm_bttn" on:click={() => onSignOut()}>YES</button>
+        <button class="cnfrm_bttn" on:click={() => confirmLogOut = false}>No</button
+        >
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>

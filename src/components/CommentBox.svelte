@@ -1,21 +1,35 @@
 <script>
   import viewport from "../../scripts/viewport";
-  import { getComments, CreatedAt } from "../../scripts/firebase";
+  import { getComments, CreatedAt, writeComment } from "../../scripts/firebase";
   import LoadingIcon from "../icons/loadingIcon.svelte";
 
   let initiateGetComments = false;
   export let postId;
   export let loggedInUser;
+
+  let mycomment = {
+    commenter: loggedInUser?.user?.displayName,
+    content: "",
+    user_id: loggedInUser?.user?.uid,
+  };
+
+  export const postAComment = async() => {
+    if(mycomment?.content.trim()) {
+      await writeComment(mycomment)
+      window.location.reload();
+    }
+  }
 </script>
 
 {#if loggedInUser?.user}
   <div class="comment_box pb-2">
     <textarea
+      bind:value={mycomment.content}
       placeholder="Leave a comment"
       use:viewport
       on:enterViewport={() => (initiateGetComments = true)}
     />
-    <button class="button">Post a comment</button>
+    <button class="button" on:click={() => postAComment()}>Post a comment</button>
   </div>
 {:else}
   <p

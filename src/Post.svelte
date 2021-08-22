@@ -1,4 +1,5 @@
 <script>
+  import { redirect } from "page";
   import {
     getPost,
     getUser,
@@ -10,6 +11,7 @@
   import { onMount } from "svelte";
   import CommentBox from "./components/CommentBox.svelte";
   import LoadingIcon from "./icons/loadingIcon.svelte";
+  import CrossIcon from "./icons/crossIcon.svelte";
   import LikeIcon from "./icons/likeIcon.svelte";
   import CommentIcon from "./icons/commentIcon.svelte";
   import SignedInAvatar from "./components/SignedInAvatar.svelte";
@@ -18,8 +20,10 @@
 
   export let loggedInUser;
   export let params;
+  let update = false;
 
   let Post;
+  let confirmDelete = false;
 
   $: getUserFromId = async (user_id) => {
     const userData = await getUser(user_id);
@@ -48,9 +52,7 @@
     }
   };
 
-  const showUpdateForm = async () => {};
-
-  const confirmDeletePost = async () => {};
+  const onDeletePost = async () => {};
 </script>
 
 <section class="post_wrapper grid-center">
@@ -72,14 +74,14 @@
           <ul class="options">
             <li>
               <button
-                on:click={() => showUpdateForm()}
+                on:click={() => (update = true)}
                 class="transparent--button my-1 w-100">EDIT</button
               >
             </li>
             <li>
               <button
-                on:click={() => confirmDeletePost()}
-                class="transparent--button my-1 w-100">DELETE</button
+                class="transparent--button my-1 w-100"
+                on:click={() => (confirmDelete = true)}>DELETE</button
               >
             </li>
           </ul>
@@ -166,6 +168,39 @@
 
       <CommentBox postId={Post?.id} {loggedInUser} />
     </div>
+    {#if update}
+      <div class="update_form">
+        <div class="cancel_btn_wrapper">
+          <button class="transparent--button" on:click={() => (update = false)}>
+            <CrossIcon className="icon" style="fill: white;margin: 0 10px;" />
+          </button>
+        </div>
+        <PostForm
+          post={{ ...Post }}
+          background={$darkmode ? "#232323" : "white"}
+          mode="UPDATE"
+        />
+      </div>
+    {/if}
+
+    {#if confirmDelete}
+      <div class="cnfrmtn_wrapper">
+        <div
+          class="cnfrm_container grid-center"
+          style={`background: ${$darkmode ? "black" : "white"};`}
+        >
+          <h5>Sure you want to deltete this post?</h5>
+          <div class="my-1 cnfrm_bttn_wrapper">
+            <button class="cnfrm_bttn" on:click={() => onDeletePost(Post?.id)}
+              >YES</button
+            >
+            <button class="cnfrm_bttn" on:click={() => (confirmDelete = false)}
+              >No</button
+            >
+          </div>
+        </div>
+      </div>
+    {/if}
   {:else}
     <h3 class="text-center">No data</h3>
     <img class="my-1" src="/assets/img/404.webp" alt="Not found" />
@@ -174,14 +209,32 @@
 
 <style>
   * {
-    position: relative;
     --shadow-inset: rgba(255, 255, 255, 0.5);
+  }
+  .cancel_btn_wrapper {
+    display: flex;
+    width: 85%;
+    justify-content: flex-end;
+    margin: 0 auto;
+    padding-top: 0.3rem;
+  }
+  .update_form {
+    position: fixed;
+    overflow: auto;
+    top: 85px;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0606068f;
   }
   button:hover {
     filter: brightness(0.85);
   }
   button:disabled {
     filter: opacity(0.25);
+  }
+  .option_wrapper {
+    position: relative;
   }
   .option_wrapper:focus-within .options {
     opacity: 1;

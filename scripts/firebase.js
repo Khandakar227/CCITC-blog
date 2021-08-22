@@ -214,7 +214,6 @@ export const getPost = async (id) => {
   const docRef = doc(db, "posts", id)
   const docSnap = await getDoc(docRef);
   if (docSnap.exists() && docSnap.data().approval) {
-    console.log(docSnap.data())
     return docSnap.data()
   } else if (docSnap.exists() && !docSnap.data().approval) {
     console.log("The post has not been approved yet!");
@@ -310,6 +309,26 @@ export const deletePost = async (post_id) => {
   return { message: "Your post has been deleted" }
 }
 
-export const writeComment = () => {
-
+export const writeComment = async (comment) => {
+  const comments = collection(db, "comments");
+  const newComment = {
+    ...comment,
+    id: doc(comments).id,
+    created_at: serverTimestamp(),
+    updated_at: serverTimestamp(),
+  }
+  try {
+    await setDoc(doc(collection(db, "comments")), newComment)
+  } catch (error) {
+    console.log(error);
+    return { error: error.message }
+  }
 }
+
+export const deleteComment = async (comment_id) => {
+  const ref = doc(db, "comments", comment_id)
+  await deleteDoc(ref)
+    .catch(err => err.message)
+  return { message: "Comment has been deleted" }
+}
+

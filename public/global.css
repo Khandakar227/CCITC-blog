@@ -134,6 +134,42 @@
   .text-center {
 	text-align: center;
   }
+  .cnfrmtn_wrapper {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    background: #3c3c3ca3;
+    z-index: 1;
+  }
+  .cnfrm_container {
+    box-shadow: 0px 6px 8px 2px #2f2f2f;
+    border-radius: 10px;
+    gap: 1vw;
+    padding: 1rem;
+  }
+  .cnfrm_bttn_wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+  button.cnfrm_bttn {
+    border: 1px solid lightgray;
+    padding: 0.8rem 1rem;
+    font-weight: bold;
+    background-color: #7979796e;
+    box-shadow: 3px 4px 5px 0px #0000006e;
+  }
+  button.cnfrm_bttn:hover {
+    background: #b22d34;
+    color: white;
+  }
+  button.cnfrm_bttn:focus {
+    box-shadow: inset 3px 4px 5px 0px #0000006e;
+  }
+ 
   .m-0-auto {margin: 0 auto;}
   .icon {
 	max-width: 80px;

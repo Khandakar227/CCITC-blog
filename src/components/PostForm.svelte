@@ -3,11 +3,12 @@
   import { createEventDispatcher } from "svelte";
   import { darkmode, notification } from "../../scripts/store";
   import compressImage from "../../scripts/file";
-  import { currentUser, addPost } from "../../scripts/firebase";
+  import { currentUser, addPost, editPost } from "../../scripts/firebase";
   import LanguageSupport from "../../public/assets/language_support.json";
 
   export let blogId = null;
   export let mode = "CREATE";
+  export let background = null;
 
   const dispatch = createEventDispatcher();
 
@@ -35,9 +36,21 @@
         notification.set(data?.message);
         dispatch("closeForm");
       }
-      else if (mode === "UPDATE") {
-        
+    } else if (mode === "UPDATE") {
+      const updatedPost = {
+        title: post.title,
+        URL: post.URL,
+        description: post.description,
+        codes: post.codes,
+        blog_id: post.blog_id || blogId,
+        user_id: $currentUser?.user?.uid,
       }
+      const updatedData = await editPost(post.id, updatedPost);
+      if (updatedData?.error) {
+          notification.set(updatedData?.error);
+          dispatch("closeForm");
+        }
+        window.location.reload();
     }
   };
 
@@ -55,9 +68,13 @@
 <div
   transition:slide={{ duration: 300 }}
   id="container"
-  style={`color: ${$darkmode ? "white" : "var(--form-text-color)"}`}
+  style={`color: ${
+    $darkmode ? "white" : "var(--form-text-color)"
+  }; background: ${background}`}
 >
-  <h1 class="pt-1">&bull; WRITE A BLOG &bull;</h1>
+  <h1 class="pt-1">
+    &bull; {mode === "CREATE" ? "WRITE A" : "EDIT"} BLOG &bull;
+  </h1>
   <form method="post" on:submit={handleSubmit}>
     <div class="title">
       <label for="tile" />
@@ -131,7 +148,11 @@
       />
     </div>
     <div class="submit">
-      <input type="submit" value="SUBMIT" id="form_button" />
+      <input
+        type="submit"
+        value={mode === "CREATE" ? "SUBMIT" : "UPDATE"}
+        id="form_button"
+      />
     </div>
   </form>
   <!-- // End form -->
