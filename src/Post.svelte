@@ -166,7 +166,7 @@
         </div>
       </div>
 
-      <CommentBox postId={Post?.id} {loggedInUser} />
+      <CommentBox postId={Post?.id} {loggedInUser} {params}/>
     </div>
     {#if update}
       <div class="update_form">

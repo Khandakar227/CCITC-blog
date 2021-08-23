@@ -17,6 +17,7 @@ import {
   updateDoc,
   arrayRemove, arrayUnion,
   deleteDoc,
+  increment,
 } from "firebase/firestore";
 import { writable } from "svelte/store";
 
@@ -257,6 +258,7 @@ export const CreatedAt = (time) => {
 
 //Write
 export const addPost = async (post) => {
+  const post_id = doc(collection(db, "posts")).id;
   const newPost = {
     ...post,
     created_at: serverTimestamp(),
@@ -264,10 +266,10 @@ export const addPost = async (post) => {
     approval: false,
     vote: [],
     comment_no: 0,
-    id: doc(collection(db, "posts")).id,
+    id: post_id,
   }
 
-  await setDoc(doc(collection(db, "posts")), newPost)
+  await setDoc(doc(collection(db, "posts", post_id)), newPost)
     .catch((err) => {
       console.log(err);
       return { error: err };
@@ -311,24 +313,41 @@ export const deletePost = async (post_id) => {
 
 export const writeComment = async (comment) => {
   const comments = collection(db, "comments");
+  const postRef = doc(db, "posts", comment?.post_id);
+
+  const comment_id = doc(comments).id;
   const newComment = {
     ...comment,
-    id: doc(comments).id,
+    id: comment_id,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
   }
   try {
-    await setDoc(doc(collection(db, "comments")), newComment)
+    await setDoc(doc(comments, comment_id), newComment)
+
+    await updateDoc(postRef, {
+      comment_no: increment(1),
+    })
+
   } catch (error) {
     console.log(error);
     return { error: error.message }
   }
 }
 
-export const deleteComment = async (comment_id) => {
-  const ref = doc(db, "comments", comment_id)
-  await deleteDoc(ref)
-    .catch(err => err.message)
-  return { message: "Comment has been deleted" }
+export const deleteComment = async (comment) => {
+  const ref = doc(db, "comments", comment?.id);
+  const postRef = doc(db, "posts", comment?.post_id);
+  try {
+    await deleteDoc(ref).catch(err => ({ error: err.message }))
+    await updateDoc(postRef, {
+      comment_no: increment(-1),
+    })
+    return { message: "Comment has been deleted" }
+  } catch (error) {
+    console.log(error);
+    return { error: error.message }
+  }
+
 }
 
