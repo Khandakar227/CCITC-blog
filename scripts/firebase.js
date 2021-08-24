@@ -18,6 +18,7 @@ import {
   arrayRemove, arrayUnion,
   deleteDoc,
   increment,
+  writeBatch
 } from "firebase/firestore";
 import { writable } from "svelte/store";
 
@@ -35,6 +36,7 @@ initializeApp(firebaseConfig);
 getAnalytics();
 
 const db = getFirestore();
+const batch = writeBatch(db);
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
@@ -100,20 +102,20 @@ var lastPost = null
 
 export const getAllBlogPosts = async (next, trim = true) => {
   let Posts = [];
-  const q = query(
-    collection(db, "posts"),
-    where("approval", "==", true),
-    orderBy("created_at", 'desc'),
-    limit(6),
-  );
-  const nq = query(
+  const q = next ? query(
     collection(db, "posts"),
     where("approval", "==", true),
     orderBy("created_at", 'desc'),
     startAfter(next ? lastPost : 0),
     limit(6),
+  ) : query(
+    collection(db, "posts"),
+    where("approval", "==", true),
+    orderBy("created_at", 'desc'),
+    limit(6),
   );
-  const querySnapshot = await getDocs(next ? nq : q);
+
+  const querySnapshot = await getDocs(q);
   querySnapshot.forEach((doc) => {
 
     if (trim) {
@@ -131,17 +133,91 @@ export const getAllBlogPosts = async (next, trim = true) => {
   return { posts: Posts, lastPost };
 };
 
-export const getBlogPosts = async (blog_id, next, trim = true) => {
+export const getAllSortedPosts = async (next, trim = true, sortBy = "TIME") => {
   let Posts = [];
-  const q = query(
-    collection(db, "posts"),
-    where("approval", "==", true),
-    where("blog_id", "==", blog_id),
-    orderBy("created_at"),
-    orderBy("vote"),
-    startAfter(next ? lastPost : 0),
-    limit(6),
-  );
+  let q;
+  if (sortBy === "TIME") {
+    q = next ? query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      orderBy("created_at", 'desc'),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    ) : query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      orderBy("created_at", 'desc'),
+      limit(6),
+    );
+
+  } else if (sortBy === "LIKES") {
+    q = query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      orderBy("vote"),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    );
+  } else if (sortBy === "COMMENTS") {
+    q = query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      orderBy("comment_no"),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    );
+  }
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach((doc) => {
+    if (trim) {
+      const { id, user_id, title, description, vote, comment_no, created_at, URL } = doc.data()
+      Posts.push({ id, user_id, title, description, vote, comment_no, created_at, URL })
+    } else
+      Posts.push(doc.data())
+  });
+
+  Posts = sortBy !== "TIME" ? Posts.reverse() : Posts;
+
+  lastPost = querySnapshot.docs[querySnapshot?.docs.length - 1]
+  if (querySnapshot.empty) {
+    lastPost = null
+  }
+
+  return { posts: Posts, lastPost };
+}
+
+export const getBlogPosts = async (blog_id, next, trim = true, sortBy = "TIME") => {
+  let Posts = [];
+  let q;
+  if (sortBy === "TIME") {
+    q = query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      where("blog_id", "==", blog_id),
+      orderBy("created_at"),
+      orderBy("vote"),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    );
+  } else if (sortBy === "LIKES") {
+    q = query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      where("blog_id", "==", blog_id),
+      orderBy("vote"),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    );
+  } else if (sortBy === "COMMENTS") {
+    q = query(
+      collection(db, "posts"),
+      where("approval", "==", true),
+      where("blog_id", "==", blog_id),
+      orderBy("vote"),
+      startAfter(next ? lastPost : 0),
+      limit(6),
+    );
+  }
 
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach((doc) => {
@@ -269,7 +345,7 @@ export const addPost = async (post) => {
     id: post_id,
   }
 
-  await setDoc(doc(collection(db, "posts", post_id)), newPost)
+  await setDoc(doc(collection(db, "posts"), post_id), newPost)
     .catch((err) => {
       console.log(err);
       return { error: err };
@@ -306,10 +382,21 @@ export const downvotePost = async (post_id, user_id) => {
 
 export const deletePost = async (post_id) => {
   const ref = doc(db, "posts", post_id)
-  await deleteDoc(ref)
+
+  batch.delete(ref);
+  const comments = query(
+    collection(db, "comments"),
+    where("post_id", "==", post_id),
+  );
+
+  const querySnapshot = await getDocs(comments);
+  querySnapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+  })
+  await batch.commit()
     .catch(err => err.message)
   return { message: "Your post has been deleted" }
-}
+};
 
 export const writeComment = async (comment) => {
   const comments = collection(db, "comments");

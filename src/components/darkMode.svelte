@@ -40,17 +40,17 @@
     left: 3vw;
   }
   .light_mode {
-    font-size: calc(var(--mode-button-height) - 2px);
+    font-size: calc(var(--mode-button-height) - 3px);
     color: white;
     position: absolute;
-    bottom: 0px;
+    bottom: 2px;
     left: 0;
   }
   .dark_mode {
-    font-size: calc(var(--mode-button-height) - 2px);
+    font-size: calc(var(--mode-button-height) - 8px);
     color: white;
     position: absolute;
-    top: -2px;
+    top: 1px;
     right: 0px;
   }
   .switch {
@@ -75,6 +75,8 @@
     -webkit-transition: 0.4s;
     transition: 0.4s;
     font-size: 1rem;
+    border-radius: 1pc;
+    box-shadow: 1px 2px 5px 1px black;
   }
   .slider:after {
     position: absolute;
@@ -83,6 +85,7 @@
     width: calc(var(--mode-button-height) - 8px);
     left: 4px;
     bottom: 4px;
+    border-radius: 2pc;
     background-color: white;
     -webkit-transition: 0.4s;
     transition: 0.4s;
@@ -97,8 +100,8 @@
   }
 
   input:checked + .slider:after {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
+    -webkit-transform: translateX(30px);
+    -ms-transform: translateX(30px);
+    transform: translateX(30px);
   }
 </style>

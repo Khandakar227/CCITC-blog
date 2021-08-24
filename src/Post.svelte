@@ -1,5 +1,4 @@
 <script>
-  import { redirect } from "page";
   import {
     getPost,
     getUser,

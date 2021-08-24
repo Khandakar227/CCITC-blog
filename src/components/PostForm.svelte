@@ -60,6 +60,7 @@
       console.log("Sorry gifs are not allowed");
       throw new Error("Sorry gifs are not allowed");
     } else {
+      file = e.target.files[0];
       compressImage(e, (data) => (post.URL = data));
     }
   };

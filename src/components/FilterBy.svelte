@@ -1,8 +1,15 @@
 <script>
   import { onDestroy } from "svelte";
-  import { darkmode } from "../../scripts/store";
+  import { darkmode, sortBy } from "../../scripts/store";
 
   onDestroy(() => $darkmode);
+
+  const selectSortBy = (e) => {
+    const title = e.target.title;
+    sortBy.set(title);
+    localStorage.setItem("sortBy", title);
+    window.location.reload();
+  };
 </script>
 
 <div class="flex_wrapper">
@@ -12,20 +19,26 @@
     style={`background: ${$darkmode ? "#b22d34" : "#ddd"}`}
   >
     <summary class="radios">
-      <input type="radio" name="item" id="default" title="Select" checked />
-      <input type="radio" name="item" id="Time" title="Time" />
-      <input type="radio" name="item" id="Likes" title="Likes" />
-      <input type="radio" name="item" id="Comments" title="Comments" />
+      <input type="radio" name="item" id="default" title={$sortBy} checked />
+      {#each ["TIME", "LIKES", "COMMENTS"] as item}
+        <input
+          type="radio"
+          name="item"
+          id={item}
+          title={item}
+          on:click={(e) => selectSortBy(e)}
+        />
+      {/each}
     </summary>
     <ul class="list" style={`background: ${$darkmode ? "#b22d34" : "#ddd"}`}>
       <li>
-        <label for="Time"> Time</label>
+        <label for="TIME"> Time</label>
       </li>
       <li>
-        <label for="Likes">Likes</label>
+        <label for="LIKES">Likes</label>
       </li>
       <li>
-        <label for="Comments">Comments</label>
+        <label for="COMMENTS">Comments</label>
       </li>
     </ul>
   </details>
@@ -40,7 +53,7 @@
   }
   details {
     position: relative;
-    width: 150px;
+    width: 180px;
     margin-right: 1rem;
   }
   @media (max-width: 450px) {

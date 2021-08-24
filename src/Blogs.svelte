@@ -126,6 +126,7 @@
     left: 0;
     min-height: 100vh;
     min-width: 99vw;
+    z-index: 1;
   }
   .cancel {
     margin: 0 10px;
