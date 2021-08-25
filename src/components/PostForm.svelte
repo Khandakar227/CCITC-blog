@@ -110,7 +110,7 @@
           type="file"
           name="myfile"
           on:change={onUpload}
-          accept="image/jpg,image/jpeg,image/png,image/webp, image/tiff, image/svg"
+          accept="image/*"
         />
       </div>
       {#if file}

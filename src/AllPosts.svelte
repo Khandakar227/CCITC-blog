@@ -7,6 +7,23 @@ export let loggedInUser;
 
 </script>
 
+
+<svelte:head>
+  <meta
+    name="description"
+    content="CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends."
+  />
+  <meta property="og:title" content="CCITC -Blog" />
+  <meta
+    property="og:description"
+    content="CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends."
+  />
+  <meta
+    property="og:image"
+    content="https://ccitclub.github.io/database/img/blog-ccitc.jpg"
+  />
+</svelte:head>
+
 <Heading {loggedInUser}/>
 <section class="blog_container">
     <BlogsTitle />

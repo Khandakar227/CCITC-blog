@@ -30,7 +30,13 @@
         <a class="no_link read" href={`/post/${post.id}`}>
           <article class="post" in:fade={{ delay: 250 * i, duration: 300 }}>
             {#if post.URL}
-              <img class="__img" src={post.URL} alt={post.title} />
+              <div>
+                <div
+                  class="__img_bg"
+                  style={`background: url("${post.URL}");background-size: contain;width: 100%; 
+                  height: 350px;background-position: center;background-repeat: no-repeat;`}
+                />
+              </div>
             {/if}
             <div class="creator_post_title">
               {#await getUserFromId(post?.user_id)}
@@ -57,11 +63,10 @@
             {/if}
             <p class="buttons">
               <small class="flex-center-all">
-                <LikeIcon
-                  className="icon"
-                /> &nbsp;&nbsp;
-                {post?.vote.includes(loggedInUser?.user?.uid)? `You and ${post?.vote?.length - 1} others` 
-                : post?.vote?.length + "Liked"} 
+                <LikeIcon className="icon" /> &nbsp;&nbsp;
+                {post?.vote.includes(loggedInUser?.user?.uid)
+                  ? `You and ${post?.vote?.length - 1} others`
+                  : post?.vote?.length + "Liked"}
               </small>
               <small class="flex-center-all">
                 <CommentIcon
@@ -102,11 +107,6 @@
   }
   .read:focus {
     box-shadow: inset 2px 2px 2px 2px #8800005e;
-  }
-  .post .__img {
-    max-width: 350px;
-    width: 100%;
-    margin: 0 auto;
   }
   .post {
     display: grid;

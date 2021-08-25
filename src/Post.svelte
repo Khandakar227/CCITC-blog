@@ -1,10 +1,12 @@
 <script>
+  import { redirect } from "page";
   import {
     getPost,
     getUser,
     CreatedAt,
     upvotePost,
     downvotePost,
+    deletePost,
   } from "../scripts/firebase";
   import { darkmode, notification } from "../scripts/store";
   import { onMount } from "svelte";
@@ -23,6 +25,7 @@
 
   let Post;
   let confirmDelete = false;
+  const description = "CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends.";
 
   $: getUserFromId = async (user_id) => {
     const userData = await getUser(user_id);
@@ -51,9 +54,36 @@
     }
   };
 
-  const onDeletePost = async () => {};
+  const onDeletePost = async (post_id) => {
+    const data = await deletePost(post_id);
+    if (data?.message) {
+      notification.set(data?.message);
+      redirect("/");
+    } else if (data?.error) {
+      notification.set(data?.error);
+    }
+  };
 </script>
 
+<svelte:head>
+  <title>{Post?.title || "Loading..."}</title>
+  <meta
+    name="description"
+    content={Post?.description.slice(0, 120) + "..." ||
+      description}
+  />
+
+  <meta property="og:title" content="CCITC -Blog" />
+  <meta
+    property="og:description"
+    content={Post?.description.slice(0, 120) + "..." ||
+      description}
+  />
+  <meta
+    property="og:image"
+    content={Post?.URL || "https://ccitclub.github.io/database/img/blog-ccitc.jpg"}
+  />
+</svelte:head>
 <section class="post_wrapper grid-center">
   {#if !Post}
     <LoadingIcon />
@@ -97,11 +127,10 @@
       </h1>
       {#if Post?.URL}
         <figure class="text-center py-2">
-          <img
-            class="post_img"
-            src={Post?.URL}
-            alt={Post?.title}
-            on:error={(e) => (e.target.src = "/assets/img/404.webp")}
+          <div
+            class="__img_bg"
+            style={`background: url("${Post?.URL}");background-size: contain;width: 100%; 
+          height: 550px;background-position: center;background-repeat: no-repeat;`}
           />
         </figure>
       {/if}
@@ -165,7 +194,7 @@
         </div>
       </div>
 
-      <CommentBox postId={Post?.id} {loggedInUser} {params}/>
+      <CommentBox postId={Post?.id} {loggedInUser} {params} />
     </div>
     {#if update}
       <div class="update_form">
@@ -285,11 +314,6 @@
     font-size: clamp(2.2rem, calc(12px + 3.85vw), 3.025rem);
     padding: 1rem 6px;
     line-height: 1.1;
-  }
-  .post_img {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
   }
   .author {
     display: flex;
