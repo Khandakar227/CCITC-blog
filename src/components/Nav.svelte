@@ -1,9 +1,9 @@
 <script>
 import Data from './global.json';
-const {logo} = Data;
+const {logo, domain} = Data;
 
-export const nav_items = [{text:'Home', href:''}, {text:'About', href:''},{text:'Executives', href:''},
-                    {text:'Blogs', href: '/'}, {text: 'Programs', href:''}, {text: 'Join us', href: ''}];
+export const nav_items = [{text:'Home', href:domain}, {text:'About', href:`${domain}/about`},{text:'Executives', href:`${domain}/executives`},
+                    {text:'Blogs', href: '/'}, {text: 'Programs', href:`${domain}/programs`}, {text: 'Join us', href: `${domain}/joinus`}];
 
 export let showBgColor = "";
 </script>
