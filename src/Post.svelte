@@ -8,6 +8,9 @@
     downvotePost,
     deletePost,
   } from "../scripts/firebase";
+  // import * as linkify from "linkifyjs";
+  import linkifyStr from "linkifyjs/string";
+  import xss from "xss";
   import { darkmode, notification } from "../scripts/store";
   import { onMount } from "svelte";
   import CommentBox from "./components/CommentBox.svelte";
@@ -18,6 +21,7 @@
   import SignedInAvatar from "./components/SignedInAvatar.svelte";
   import PostForm from "./components/PostForm.svelte";
   import Settings from "./icons/settings.svelte";
+  import Metas from "./components/Metas.svelte";
 
   export let loggedInUser;
   export let params;
@@ -25,7 +29,6 @@
 
   let Post;
   let confirmDelete = false;
-  const description = "CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends.";
 
   $: getUserFromId = async (user_id) => {
     const userData = await getUser(user_id);
@@ -63,27 +66,25 @@
       notification.set(data?.error);
     }
   };
+
+  const linkExtract = (txt) => {
+    const xss_option = {
+      whiteList: {
+        a: ["href", "title", "target"],
+      },
+    };
+    const option = { defaultProtocol: "https" };
+    return linkifyStr(xss(txt, xss_option), option);
+  };
 </script>
 
-<svelte:head>
-  <title>{Post?.title || "Loading..."}</title>
-  <meta
-    name="description"
-    content={Post?.description.slice(0, 120) + "..." ||
-      description}
-  />
+<Metas
+  title={Post?.title}
+  description={Post?.description.slice(0, 120) + "..."}
+  ogTitle={Post?.title}
+  ogImage={Post?.URL}
+/>
 
-  <meta property="og:title" content="CCITC -Blog" />
-  <meta
-    property="og:description"
-    content={Post?.description.slice(0, 120) + "..." ||
-      description}
-  />
-  <meta
-    property="og:image"
-    content={Post?.URL || "https://ccitclub.github.io/database/img/blog-ccitc.jpg"}
-  />
-</svelte:head>
 <section class="post_wrapper grid-center">
   {#if !Post}
     <LoadingIcon />
@@ -152,7 +153,7 @@
       </div>
       <pre
         class="description py-1 pb-2">
-                {Post?.description}
+                {@html linkExtract(Post?.description)}
             </pre>
       {#if Post?.codes}
         <div class="code_wrapper">

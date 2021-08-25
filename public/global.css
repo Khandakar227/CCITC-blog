@@ -169,7 +169,13 @@
   button.cnfrm_bttn:focus {
     box-shadow: inset 3px 4px 5px 0px #0000006e;
   }
- 
+  pre.description a {
+    color: #b20000;
+    text-decoration: auto;
+}
+pre.description a:hover {
+  filter: brightness(1.5);
+}
   .m-0-auto {margin: 0 auto;}
   .icon {
 	max-width: 80px;

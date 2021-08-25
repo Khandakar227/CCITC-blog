@@ -3,6 +3,7 @@
   import { getBlogPosts, getBlogCategoryDetail } from "../scripts/firebase";
   import { darkmode } from "../scripts/store";
   import Heading from "./components/Heading.svelte";
+  import Metas from "./components/Metas.svelte";
   import PostForm from "./components/PostForm.svelte";
   import PostsGrid from "./components/PostsGrid.svelte";
   import CrossIcon from "./icons/crossIcon.svelte";
@@ -40,22 +41,7 @@
   };
 </script>
 
-<svelte:head>
-  <meta
-    name="description"
-    content="CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends."
-  />
-  <meta property="og:title" content="CCITC -Blog" />
-  <meta
-    property="og:description"
-    content="CCITC's official blog site. Sign in with your Google account. Create a blog of your own. Show it to your friends."
-  />
-  <meta
-    property="og:image"
-    content="https://ccitclub.github.io/database/img/blog-ccitc.jpg"
-  />
-</svelte:head>
-
+<Metas />
 {#await getBlogCategoryDetail(params?.id)}
   <div style="margin: 0 auto; display: grid; justify-content: center;">
     <LoadingIcon className="icon" style="background: #b20000" />
